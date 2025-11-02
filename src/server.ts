@@ -18,8 +18,8 @@ import { scrapeDFCC } from "./scrapers/dfcc";
 import { scrapeNSB } from "./scrapers/nsb";
 import { scrapeBOC } from "./scrapers/boc";
 import { scrapeCargills } from "./scrapers/cargills";
-import { scrapeNTB } from "./scrapers/ntb";
-import { scrapeAmana } from "./scrapers/amana";
+// import { scrapeNTB } from "./scrapers/ntb";        // PDF parser - DISABLED
+// import { scrapeAmana } from "./scrapers/amana";    // PDF parser - DISABLED
 import { scrapeCBSL } from "./scrapers/cbsl";
 import { scrapeHnbTariff } from "./scrapers/hnb-tariff";
 import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";
@@ -27,12 +27,12 @@ import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";
 import { scrapeCombankTariff } from "./scrapers/combank_tariff";
 import { scrapeNdbTariff } from "./scrapers/ndb-tariff";
 import { scrapeUnionbTariff } from "./scrapers/unionb-tariff";
-import { scrapeDfccTariff } from "./scrapers/dfcc-tariff";
+// import { scrapeDfccTariff } from "./scrapers/dfcc-tariff";      // PDF/OCR - DISABLED
 import { scrapeNSBTariff } from "./scrapers/nsb-tariff";
 import { scrapeBocTariff } from "./scrapers/boc-tariff";
 import { scrapeCargillsTariff } from "./scrapers/cargills-tariff";
-import { scrapeNtbTariff } from "./scrapers/ntb-tariff";
-import { scrapeAmanaTariff } from "./scrapers/amana-tariff";
+// import { scrapeNtbTariff } from "./scrapers/ntb-tariff";         // PDF/OCR - DISABLED
+// import { scrapeAmanaTariff } from "./scrapers/amana-tariff";     // PDF/OCR - DISABLED
 // import { scrapePeoplesTariff } from "./scrapers/peoples-tariff";  // PDF/OCR - DISABLED
 
 const app = express();
@@ -109,8 +109,8 @@ interface TariffRow {
 /** The same keys you used for individual tariff endpoints (excluding PDF-based ones) */
 const TARIFF_SCRAPER_KEYS = [
   "hnb-tariff", "seylan-tariff", /* "sampath-tariff", */ "combank-tariff",
-  "ndb-tariff", "unionb-tariff", "dfcc-tariff", "nsb-tariff",
-  "boc-tariff", "cargills-tariff", "ntb-tariff", "amana-tariff", /* "peoples-tariff", */
+  "ndb-tariff", "unionb-tariff", /* "dfcc-tariff", */ "nsb-tariff",
+  "boc-tariff", "cargills-tariff", /* "ntb-tariff", */ /* "amana-tariff", */ /* "peoples-tariff", */
 ] as const;
 
 /** Safe array coerce */
@@ -154,8 +154,8 @@ app.get("/endpoints", (req, res) => {
       `NSB                : ${baseUrl}/scrape/nsb?show=true&slow=200`,
       `BOC                : ${baseUrl}/scrape/boc?show=true&slow=200`,
       `Cargills           : ${baseUrl}/scrape/cargills?show=true&slow=200`,
-      `NTB                : ${baseUrl}/scrape/ntb`,
-      `Amana              : ${baseUrl}/scrape/amana`,
+      `NTB                : ${baseUrl}/scrape/ntb (PDF scraper - disabled in production)`,
+      `Amana              : ${baseUrl}/scrape/amana (PDF scraper - disabled in production)`,
       `CBSL               : ${baseUrl}/scrape/cbsl`,
       `HNB Tariff         : ${baseUrl}/scrape/hnb-tariff (temporarily disabled)`,
       `Seylan Tariff      : ${baseUrl}/scrape/seylan-tariff (temporarily disabled)`,
@@ -163,12 +163,12 @@ app.get("/endpoints", (req, res) => {
       `ComBank Tariff     : ${baseUrl}/scrape/combank-tariff?show=true&slow=200`,
       `NDB Tariff         : http://localhost:${PORT}/scrape/ndb-tariff?show=true&slow=200`,
       `UnionBank Tariff   : http://localhost:${PORT}/scrape/unionb-tariff?show=true&slow=200`,
-      `DFCC Tariff        : http://localhost:${PORT}/scrape/dfcc-tariff?show=true&slow=200`,
-      `NSB Tariff         : http://localhost:${PORT}/scrape/nsb-tariff?show=true&slow=200`,
-      `BOC Tariff         : http://localhost:${PORT}/scrape/boc-tariff?show=true&slow=200`,
-      `Cargills Tariff    : http://localhost:${PORT}/scrape/cargills-tariff?show=true&slow=200`,
-      `NTB Tariff         : http://localhost:${PORT}/scrape/ntb-tariff?show=true&slow=200`,
-      `Amana Tariff       : ${baseUrl}/scrape/amana-tariff`,
+      `DFCC Tariff        : ${baseUrl}/scrape/dfcc-tariff (PDF required - disabled)`,
+      `NSB Tariff         : ${baseUrl}/scrape/nsb-tariff`,
+      `BOC Tariff         : ${baseUrl}/scrape/boc-tariff`,
+      `Cargills Tariff    : ${baseUrl}/scrape/cargills-tariff`,
+      `NTB Tariff         : ${baseUrl}/scrape/ntb-tariff (PDF/OCR required - disabled)`,
+      `Amana Tariff       : ${baseUrl}/scrape/amana-tariff (PDF required - disabled)`,
       `Peoples Tariff     : ${baseUrl}/scrape/peoples-tariff (OCR required - disabled)`,
       `ALL                : http://localhost:${PORT}/scrape/all?show=true&slow=200`,
       `Tariff ALL         : http://localhost:${PORT}/scrape/tariffs-all?show=true&slow=200`,
@@ -621,14 +621,28 @@ app.get("/scrape/cargills", async (req, res) => {
   } catch (e: any) { res.status(500).json({ error: e?.message || String(e) }); }
 });
 
+// NTB PDF scraper - disabled due to PDF.js dependencies
 app.get("/scrape/ntb", async (_req, res) => {
-  try { res.json(await scrapeNTB()); }
-  catch (e: any) { res.status(500).json({ error: String(e?.message || e) }); }
+  res.status(503).json({ 
+    error: "NTB PDF scraper temporarily disabled in production",
+    reason: "PDF.js dependency not available in serverless environment",
+    alternative: "Use other bank scrapers for rate comparison",
+    bank: "NTB",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
+// Amana PDF scraper - disabled due to PDF.js dependencies
 app.get("/scrape/amana", async (_req, res) => {
-  try { res.json(await scrapeAmana()); }
-  catch (e: any) { res.status(500).json({ error: String(e?.message || e) }); }
+  res.status(503).json({ 
+    error: "Amana PDF scraper temporarily disabled in production",
+    reason: "PDF.js dependency not available in serverless environment",
+    alternative: "Use other bank scrapers for rate comparison", 
+    bank: "Amana",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 /** CBSL AWPR monthly series */
@@ -739,14 +753,17 @@ app.get("/scrape/unionb-tariff", async (_req, res) => {
   }
 });
 
-/** DFCC-Tariff */
+/** DFCC-Tariff - disabled due to PDF dependencies */
 app.get("/scrape/dfcc-tariff", async (req, res) => {
-  try {
-    const data = await scrapeDfccTariff();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: String(e) });
-  }
+  res.status(503).json({ 
+    error: "DFCC tariff scraper requires PDF tools not available in production",
+    reason: "Requires pdf-parse library with Canvas dependencies",
+    alternative: "Manual PDF analysis or local development environment",
+    bank: "DFCC",
+    operation: "tariff scraping",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 /** NSB-Tariff */
@@ -784,33 +801,31 @@ app.get("/scrape/cargills-tariff", async (req, res) => {
   }
 });
 
-// NTB Tariff (fees/charges)
+// NTB Tariff - disabled due to PDF.js dependencies
 app.get("/scrape/ntb-tariff", async (req, res) => {
-  try {
-    const rows = await scrapeNtbTariff({
-      show: String(req.query.show || ""),
-      slow: String(req.query.slow || ""),
-      save: String(req.query.save || "")
-    });
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err?.message || String(err) });
-  }
+  res.status(503).json({ 
+    error: "NTB tariff scraper requires PDF tools not available in production",
+    reason: "Requires pdfjs-dist and tesseract with Canvas/OCR dependencies",
+    alternative: "Manual PDF analysis or local development environment",
+    bank: "NTB",
+    operation: "tariff scraping",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 /** Amana-Tariff (OCR lines first pass) */
+/** Amana-Tariff - disabled due to PDF.js dependencies */
 app.get("/scrape/amana-tariff", async (req, res) => {
-  try {
-    const rows = await scrapeAmanaTariff({
-      show: String(req.query.show || ""),
-      slow: String(req.query.slow || ""),
-      save: String(req.query.save || "")
-    });
-    res.json(rows);
-  } catch (err: any) {
-    console.error("Amana Tariff scrape failed:", err);
-    res.status(500).json({ error: err?.message || String(err) });
-  }
+  res.status(503).json({ 
+    error: "Amana tariff scraper requires PDF tools not available in production",
+    reason: "Requires pdfjs-dist library with Canvas dependencies",
+    alternative: "Manual PDF analysis or local development environment",
+    bank: "Amana",
+    operation: "tariff scraping",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 /** Peoples-Tariff - disabled due to OCR dependencies */
@@ -854,8 +869,8 @@ app.get("/scrape/all", async (req, res) => {
     NSB: () => scrapeNSB({ show, slow }),
     BOC: () => scrapeBOC({ show: String(show), slow: String(slow), save: "false" } as any),
     Cargills: () => scrapeCargills({ show: String(show), slow: String(slow), save: "false" }),
-    NTB: () => scrapeNTB(),
-    Amana: () => scrapeAmana(),
+    // NTB: DISABLED - PDF.js dependency issue
+    // Amana: DISABLED - PDF.js dependency issue
   } as const;
 
   const results: any[] = [];
