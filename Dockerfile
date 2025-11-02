@@ -1,5 +1,5 @@
-# Use Node.js 18 with Debian base for better Playwright support
-FROM node:18-bullseye
+# Use Node.js 20 with Debian base for better Playwright support
+FROM node:20-bullseye
 
 # Install system dependencies for Playwright and Canvas
 RUN apt-get update && apt-get install -y \
@@ -66,6 +66,7 @@ EXPOSE $PORT
 # Set environment variables for production
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_HEADLESS=true
+ENV NODE_OPTIONS="--no-warnings"
 
-# Start the server with ts-node  
+# Start the server with ts-node
 CMD ["npx", "ts-node", "-T", "src/server.ts"]
