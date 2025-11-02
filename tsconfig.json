@@ -11,8 +11,16 @@
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"],
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "node"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/utils.ts"]
+  "exclude": [
+    "src/**/*.spec.ts", 
+    "src/utils.ts",
+    "src/scrapers/unionb-tariff-lines.ts",
+    "src/scrapers/unionb-tariff.ts"
+  ]
 }
