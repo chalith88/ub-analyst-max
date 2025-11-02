@@ -130,7 +130,8 @@ function mergeTariffsByKey(existing: TariffRow[], incoming: TariffRow[]): Tariff
   return [...map.values()];
 }
 
-app.get("/", (req, res) => {
+// API endpoints listing - moved to /endpoints
+app.get("/endpoints", (req, res) => {
   const baseUrl = isProduction ? "https://ub-analyst-max-final.onrender.com" : `http://localhost:${PORT}`;
   res.type("text/plain").send(
     [
@@ -915,7 +916,7 @@ if (isProduction) {
   });
 }
 
-/* ---------------- Setup static files ---------------- */
+/* ---------------- Setup static files and SPA routes ---------------- */
 const setupStaticFiles = async () => {
   if (isProduction) {
     // Since we're using ts-node, __dirname points to src/, so client is at ../client/dist
@@ -924,8 +925,31 @@ const setupStaticFiles = async () => {
     
     try {
       await fs.access(clientBuildPath);
+      
+      // Serve static files
       app.use(express.static(clientBuildPath));
       console.log("✅ Static files configured successfully");
+      
+      // SPA catch-all route - serve React app for root and frontend routes
+      app.get('/', (req, res) => {
+        res.sendFile(path.join(clientBuildPath, "index.html"));
+      });
+      
+      // Catch-all for other frontend routes (SPA routing)
+      app.get('*', (req, res) => {
+        // Don't serve React app for API routes
+        if (req.path.startsWith('/scrape') || req.path.startsWith('/api') || 
+            req.path === '/health' || req.path === '/debug' || req.path === '/endpoints') {
+          res.status(404).json({ error: 'API endpoint not found' });
+          return;
+        }
+        
+        // Serve React app for all other routes (SPA routing)
+        res.sendFile(path.join(clientBuildPath, "index.html"));
+      });
+      
+      console.log("✅ SPA routing configured successfully");
+      
     } catch (err) {
       console.error(`❌ Client build directory not found: ${clientBuildPath}`);
       console.error("Frontend may not be accessible");
