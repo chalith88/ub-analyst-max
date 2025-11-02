@@ -500,7 +500,13 @@ export async function scrapeCargills(opts: Opts = {}): Promise<RateRow[]> {
 
     // 2) Get embedded PDF URL from <object type="application/pdf" data="...">
     const obj = page.locator('object[type="application/pdf"]');
-    await obj.first().waitFor({ state: "visible", timeout: 15000 });
+    
+    // Wait for the page to fully load
+    await page.waitForLoadState("networkidle", { timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(2000); // Additional wait for PDF to load
+    
+    // Try to find the PDF object with extended timeout
+    await obj.first().waitFor({ state: "visible", timeout: 30000 });
     const pdfUrl = await obj.first().getAttribute("data");
     if (!pdfUrl) throw new Error("Embedded PDF URL not found");
 

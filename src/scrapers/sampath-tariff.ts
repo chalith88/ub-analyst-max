@@ -26,7 +26,12 @@ function normAll(txt: string) { return txt.split(/\r?\n+/).map(normSpaces).filte
 // ----------- System commands -----------
 function execOk(cmd: string, args: string[], opts?: { cwd?: string }) {
   const out = spawnSync(cmd, args, { encoding: "utf8", ...opts });
-  if (out.error) throw out.error;
+  if (out.error) {
+    if (out.error.code === 'ENOENT') {
+      throw new Error(`OCR pipeline failed: '${cmd}' is not installed. This scraper requires pdftoppm and tesseract to be installed in the production environment.`);
+    }
+    throw out.error;
+  }
   if (out.status !== 0) throw new Error(`${cmd} failed: ${out.stderr || out.stdout}`);
   return out;
 }

@@ -21,8 +21,8 @@ import { scrapeCargills } from "./scrapers/cargills";
 import { scrapeNTB } from "./scrapers/ntb";
 import { scrapeAmana } from "./scrapers/amana";
 import { scrapeCBSL } from "./scrapers/cbsl";
-// import { scrapeHnbTariff } from "./scrapers/hnb-tariff";  // Disabled - uses jsdom
-// import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";  // Disabled - uses jsdom
+import { scrapeHnbTariff } from "./scrapers/hnb-tariff";
+import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";
 import { scrapeSampathTariff } from "./scrapers/sampath-tariff";
 import { scrapeCombankTariff } from "./scrapers/combank_tariff";
 import { scrapeNdbTariff } from "./scrapers/ndb-tariff";
@@ -638,14 +638,30 @@ app.get("/scrape/cbsl", async (req, res) => {
   }
 });
 
-/** HNB-Tariff - Temporarily disabled */
+/** HNB-Tariff */
 app.get("/scrape/hnb-tariff", async (req, res) => {
-  res.status(503).json({ error: "HNB tariff scraper temporarily disabled due to deployment issues" });
+  try {
+    const show = req.query.show === "true";
+    const slow = Number(req.query.slow || 0) || (show ? 200 : 0);
+    const rows = await scrapeHnbTariff({ show, slow });
+    res.json(rows);
+  } catch (err: any) {
+    console.error("HNB-Tariff scraper error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-/** Seylan-Tariff - Temporarily disabled */
+/** Seylan-Tariff */
 app.get("/scrape/seylan-tariff", async (req, res) => {
-  res.status(503).json({ error: "Seylan tariff scraper temporarily disabled due to deployment issues" });
+  try {
+    const show = req.query.show === "true";
+    const slow = Number(req.query.slow || 0) || (show ? 200 : 0);
+    const rows = await scrapeSeylanTariff({ show, slow });
+    res.json(rows);
+  } catch (err: any) {
+    console.error("Seylan-Tariff scraper error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /** Sampath-Tariff */
@@ -673,6 +689,17 @@ app.get("/scrape/ndb-tariff", async (req, res) => {
 
 /** ComBank_Tariff */
 app.get("/scrape/combank_tariff", async (req, res) => {
+  try {
+    const data = await scrapeCombankTariff();
+    res.json(data);
+  } catch (e) {
+    console.error("Combank Tariff Scraper Error:", e);
+    res.status(500).json({ error: "Failed to scrape Combank tariffs" });
+  }
+});
+
+/** ComBank-Tariff (dash version) */
+app.get("/scrape/combank-tariff", async (req, res) => {
   try {
     const data = await scrapeCombankTariff();
     res.json(data);

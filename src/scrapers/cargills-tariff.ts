@@ -86,14 +86,35 @@ async function extractPdfLines(page: Page): Promise<string[]> {
 }
 
 async function findTariffPdf(page: Page, logs: string[]): Promise<string> {
-  await page.goto(SRC + "#Loans-and-Advances", { waitUntil: "domcontentloaded", timeout: 30000 });
-  await page.waitForTimeout(500);
+  await page.goto(SRC + "#Loans-and-Advances", { waitUntil: "domcontentloaded", timeout: 45000 });
+  
+  // Wait for the tab content to be active
+  await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(2000);
+  
+  // Try clicking the tab to ensure it's active
+  const tab = page.locator('a[href="#Loans-and-Advances"]');
+  if (await tab.count() > 0) {
+    await tab.first().click().catch(() => {});
+    await page.waitForTimeout(1000);
+  }
+  
   let pdfUrl =
     (await page.locator("#Loans-and-Advances.tab-pane iframe[src*='.pdf']").first().getAttribute("src").catch(() => null)) ||
     (await page.locator("#Loans-and-Advances.tab-pane object[type='application/pdf']").first().getAttribute("data").catch(() => null)) ||
     (await page.locator("#Loans-and-Advances.tab-pane a[href$='.pdf']").first().getAttribute("href").catch(() => null)) ||
+    (await page.locator("iframe[src*='.pdf']").first().getAttribute("src").catch(() => null)) ||
+    (await page.locator("object[type='application/pdf']").first().getAttribute("data").catch(() => null)) ||
+    (await page.locator("a[href$='.pdf']").first().getAttribute("href").catch(() => null)) ||
     null;
-  if (!pdfUrl) throw new Error("PDF URL not found on Loans-and-Advances tab");
+    
+  if (!pdfUrl) {
+    logs.push("PDF selectors failed, dumping page content for debugging...");
+    const content = await page.content();
+    logs.push(`Page content length: ${content.length}`);
+    throw new Error("PDF URL not found on Loans-and-Advances tab");
+  }
+  
   if (pdfUrl.startsWith("/")) pdfUrl = "https://www.cargillsbank.com" + pdfUrl;
   logs.push(`pdf: resolved -> ${pdfUrl}`);
   return pdfUrl;
