@@ -43,9 +43,6 @@ RUN npm install --only=production --legacy-peer-deps
 # Copy all source code including output directory
 COPY . .
 
-# Verify output directory exists (debug)
-RUN ls -la /app/output/ && echo "Output files found"
-
 # Install frontend dependencies
 WORKDIR /app/client
 RUN npm install --legacy-peer-deps
