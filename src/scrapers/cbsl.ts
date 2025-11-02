@@ -1,7 +1,8 @@
 // src/scrapers/cbsl.ts
-import { chromium, Browser, Page } from "playwright";
+import { Browser, Page } from "playwright";
 import fs from "fs/promises";
 import path from "path";
+import { launchBrowser } from "../utils/browser";
 
 type Opts = { show?: string; slow?: string; save?: string; preferDirect?: string };
 type Row = {
@@ -69,7 +70,7 @@ export async function scrapeCBSL(opts: Opts = {}): Promise<Row[]> {
   const updatedAt = nowISO();
 
   try {
-    browser = await chromium.launch({ headless, slowMo });
+    browser = await launchBrowser({ show: !headless, slow: slowMo });
     const page = await browser.newPage();
 
     // Known redirect path — allow/continue (no abort needed with this flow)
