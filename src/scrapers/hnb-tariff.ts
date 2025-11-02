@@ -4,7 +4,6 @@ import { Page } from "playwright";
 import { launchBrowser } from "../utils/browser";
 import { clean } from "../utils/text";
 import { acceptAnyCookie } from "../utils/dom";
-import { JSDOM } from "jsdom";
 
 // Types
 export interface FeeRow {
@@ -30,33 +29,80 @@ export async function scrapeHnbTariff(opts?: { show?: boolean; slow?: number }):
   const now = new Date().toISOString();
 
   try {
-    // Try domcontentloaded first, fallback to load with longer timeout
-    try {
-      await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 60000 });
-    } catch (e) {
-      await page.goto(URL, { waitUntil: "load", timeout: 90000 });
-    }
+    await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 45000 });
     await acceptAnyCookie(page);
-
-    // Click to expand "Personal Financial Services"
-    const persFinSel = 'button:has-text("Personal Financial Services")';
-    await page.waitForSelector(persFinSel, { timeout: 8000 });
-    await page.locator(persFinSel).click();
-
-    // Click to expand "HOME LOAN AND PERSONAL LOAN CHARGES"
-    const homeLoanButton = page.locator('button:has-text("HOME LOAN AND PERSONAL LOAN CHARGES")');
-    await homeLoanButton.waitFor({ state: "visible", timeout: 8000 });
-    await homeLoanButton.click();
 
     // Wait for the table to show up
     const tableSel = 'table.w-full.text-left';
     await page.waitForSelector(tableSel, { timeout: 8000 });
 
-    // Extract the HTML table for parsing
-    const tableHtml = await page.$eval(tableSel, el => el.outerHTML);
+    // Parse table directly in browser context (no external dependencies)
+    const rows = await page.evaluate((selector, timestamp, url) => {
+      const table = document.querySelector(selector);
+      if (!table) return [];
 
-    // Parse and flatten
-    const rows = parseTariffTable(tableHtml, now);
+      const out: any[] = [];
+      const trs = Array.from(table.querySelectorAll("tbody tr"));
+      let groupDesc = "";
+
+      function cleanText(text: string): string {
+        return text.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      for (const tr of trs) {
+        const tds = Array.from(tr.querySelectorAll("td")).map(td => cleanText(td.textContent || ""));
+        if (!tds.length) continue;
+
+        if (tds.length === 3) {
+          groupDesc = tds[0];
+          out.push({
+            bank: "HNB",
+            product: "Home Loan",
+            feeType: tds[1],
+            description: groupDesc,
+            amount: tds[2],
+            updatedAt: timestamp,
+            source: url,
+          });
+        } else if (tds.length === 2) {
+          const isLikelyGroupLabel = /charges?/i.test(tds[0]) || /settlement/i.test(tds[0]);
+          if (isLikelyGroupLabel) {
+            groupDesc = tds[0];
+            out.push({
+              bank: "HNB",
+              product: "Home Loan",
+              feeType: "",
+              description: groupDesc,
+              amount: tds[1],
+              updatedAt: timestamp,
+              source: url,
+            });
+          } else {
+            out.push({
+              bank: "HNB", 
+              product: "Home Loan",
+              feeType: tds[0],
+              description: groupDesc,
+              amount: tds[1],
+              updatedAt: timestamp,
+              source: url,
+            });
+          }
+        } else if (tds.length === 1 && tds[0]) {
+          out.push({
+            bank: "HNB",
+            product: "Home Loan",
+            feeType: "",
+            description: groupDesc,
+            amount: "",
+            notes: tds[0],
+            updatedAt: timestamp,
+            source: url,
+          });
+        }
+      }
+      return out;
+    }, tableSel, now, URL);
 
     // Expand per product
     const expandedRows: FeeRow[] = [];
@@ -64,84 +110,14 @@ export async function scrapeHnbTariff(opts?: { show?: boolean; slow?: number }):
       for (const product of PRODUCT) {
         expandedRows.push({
           ...r,
-          bank: "HNB",
           product: product,
-          updatedAt: now,
-          source: URL,
         });
       }
     }
+
     return expandedRows;
+
   } finally {
     await browser.close();
   }
 }
-
-// Helper: parse HTML string table to FeeRow[] (dynamic group/heading logic)
-function parseTariffTable(html: string, now: string): FeeRow[] {
-  const dom = new JSDOM(html);
-  const doc = dom.window.document;
-  const out: FeeRow[] = [];
-  const trs = Array.from(doc.querySelectorAll("tbody tr"));
-  let groupDesc = ""; // dynamic heading
-
-  for (let i = 0; i < trs.length; ++i) {
-    const tds = Array.from(trs[i].querySelectorAll("td")).map(td => clean(td.textContent || ""));
-    if (!tds.length) continue;
-    if (tds.length === 3) {
-      // New group + first subrow
-      groupDesc = tds[0];
-      out.push({
-        bank: "HNB",
-        product: [],
-        feeType: tds[1],
-        description: groupDesc,
-        amount: tds[2],
-        updatedAt: now,
-        source: URL,
-      });
-    } else if (tds.length === 2) {
-      // If this is a new group label (like "Early Settlement / Part Payment Charges"),
-      // and the amount cell is a full sentence, treat this as a new section with no sub-rows
-      const isLikelyGroupLabel = /charges?/i.test(tds[0]) || /settlement/i.test(tds[0]);
-      if (isLikelyGroupLabel) {
-        groupDesc = tds[0];
-        out.push({
-          bank: "HNB",
-          product: [],
-          feeType: "",
-          description: groupDesc,
-          amount: tds[1],
-          updatedAt: now,
-          source: URL,
-        });
-      } else {
-        // Normal 2-col row in current group
-        out.push({
-          bank: "HNB",
-          product: [],
-          feeType: tds[0],
-          description: groupDesc,
-          amount: tds[1],
-          updatedAt: now,
-          source: URL,
-        });
-      }
-    } else if (tds.length === 1 && tds[0]) {
-      // Note row (rare)
-      out.push({
-        bank: "HNB",
-        product: [],
-        feeType: "",
-        description: groupDesc,
-        amount: "",
-        notes: tds[0],
-        updatedAt: now,
-        source: URL,
-      });
-    }
-  }
-  return out;
-}
-
-export default scrapeHnbTariff;

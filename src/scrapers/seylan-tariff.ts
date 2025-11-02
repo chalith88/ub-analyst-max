@@ -3,7 +3,6 @@
 import { launchBrowser } from "../utils/browser";
 import { clean } from "../utils/text";
 import { acceptAnyCookie } from "../utils/dom";
-import { JSDOM } from "jsdom";
 
 export interface FeeRow {
   bank: string;
@@ -29,80 +28,131 @@ export async function scrapeSeylanTariff(opts?: { show?: boolean; slow?: number 
     await page.goto(URL, { waitUntil: "domcontentloaded", timeout: 45000 });
     await acceptAnyCookie(page);
 
-    // Wait for HOUSING LOAN CHARGES table
-    const homeLoanSel = 'h3:text("HOUSING LOAN CHARGES") + table';
-    await page.waitForSelector(homeLoanSel, { timeout: 12000 });
-    const homeLoanTableHtml = await page.$eval(homeLoanSel, el => el.outerHTML);
+    // Get Home Loan table
+    const homeLoanTableSel = "#home .table-responsive table";
+    await page.waitForSelector(homeLoanTableSel, { timeout: 8000 });
+    
+    const homeLoanRows = await page.evaluate((selector: string, product: string, timestamp: string, url: string) => {
+      function cleanText(text: string): string {
+        return text.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+      }
 
-    // Parse Home Loan table
-    let homeLoanRows = parseSeylanTariffTable(homeLoanTableHtml, "Home Loan", now);
+      const table = document.querySelector(selector);
+      if (!table) return [];
 
-    // Scroll down and expand LAP section
-    // Find the span or link for LAP and click it if collapsed
-    const lapTriggerSel = 'span.item_title:has-text("LOAN AGAINST PROPERTY (LAP)")';
-    await page.waitForSelector(lapTriggerSel, { timeout: 12000 });
-    const lapTrigger = page.locator(lapTriggerSel);
-    await lapTrigger.scrollIntoViewIfNeeded();
-    // Sometimes needs click, sometimes double click (if already expanded, click is safe)
-    await lapTrigger.click();
+      const out: any[] = [];
+      const trs = Array.from(table.querySelectorAll("tbody tr"));
+      let groupDesc = ""; // the main group/heading (bold in Description col)
 
-    // Wait for LAP table to appear
-    const lapTableSel = 'h3:text("LOAN AGAINST PROPERTY (LAP)") + table';
-    await page.waitForSelector(lapTableSel, { timeout: 12000 });
-    const lapTableHtml = await page.$eval(lapTableSel, el => el.outerHTML);
+      for (let i = 0; i < trs.length; ++i) {
+        const tr = trs[i] as HTMLTableRowElement;
+        const tds = Array.from(tr.querySelectorAll("td")).map(td => cleanText(td.textContent || ""));
+        if (tds.length < 2) continue;
 
-    // Parse LAP table
-    let lapRows = parseSeylanTariffTable(lapTableHtml, "LAP", now);
+        // If description cell is bold (main group), treat as new group
+        const descCell = tr.querySelector(".row-two-value");
+        const isBold = descCell?.querySelector("b") != null;
 
-    // Return combined, with per-product expansion
-    return [...homeLoanRows, ...lapRows];
+        if (isBold && tds[2] === "") {
+          // Group/heading row (e.g., Mortgage Bond, Valuation Fee, etc)
+          groupDesc = tds[1];
+          continue; // No fee on group header, skip to children
+        }
+
+        // For the first row under a group, if isBold and has fee, it's also a group/heading
+        if (isBold && tds[2] !== "") {
+          groupDesc = tds[1];
+          out.push({
+            bank: "Seylan",
+            products: [product],
+            feeType: "",
+            description: groupDesc,
+            amount: tds[2],
+            updatedAt: timestamp,
+            source: url,
+          });
+        } else {
+          // Sub-row under group
+          out.push({
+            bank: "Seylan",
+            products: [product],
+            feeType: tds[1],
+            description: groupDesc,
+            amount: tds[2],
+            updatedAt: timestamp,
+            source: url,
+          });
+        }
+      }
+      return out;
+    }, homeLoanTableSel, "Home Loan", now, URL);
+
+    // Get LAP table
+    const lapUrl = "https://www.seylan.lk/service-charges?category=LAND_ACQUISITION_AND_PROPERTY";
+    await page.goto(lapUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await acceptAnyCookie(page);
+
+    const lapTableSel = "#lap .table-responsive table";
+    await page.waitForSelector(lapTableSel, { timeout: 8000 });
+
+    const lapRows = await page.evaluate((selector: string, product: string, timestamp: string, url: string) => {
+      function cleanText(text: string): string {
+        return text.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      const table = document.querySelector(selector);
+      if (!table) return [];
+
+      const out: any[] = [];
+      const trs = Array.from(table.querySelectorAll("tbody tr"));
+      let groupDesc = ""; // the main group/heading (bold in Description col)
+
+      for (let i = 0; i < trs.length; ++i) {
+        const tr = trs[i] as HTMLTableRowElement;
+        const tds = Array.from(tr.querySelectorAll("td")).map(td => cleanText(td.textContent || ""));
+        if (tds.length < 2) continue;
+
+        // If description cell is bold (main group), treat as new group
+        const descCell = tr.querySelector(".row-two-value");
+        const isBold = descCell?.querySelector("b") != null;
+
+        if (isBold && tds[2] === "") {
+          // Group/heading row (e.g., Mortgage Bond, Valuation Fee, etc)
+          groupDesc = tds[1];
+          continue; // No fee on group header, skip to children
+        }
+
+        // For the first row under a group, if isBold and has fee, it's also a group/heading
+        if (isBold && tds[2] !== "") {
+          groupDesc = tds[1];
+          out.push({
+            bank: "Seylan",
+            products: [product],
+            feeType: "",
+            description: groupDesc,
+            amount: tds[2],
+            updatedAt: timestamp,
+            source: url,
+          });
+        } else {
+          // Sub-row under group
+          out.push({
+            bank: "Seylan",
+            products: [product],
+            feeType: tds[1],
+            description: groupDesc,
+            amount: tds[2],
+            updatedAt: timestamp,
+            source: url,
+          });
+        }
+      }
+      return out;
+    }, lapTableSel, "LAP", now, lapUrl);
+
+    // Return combined
+    return [...(homeLoanRows as FeeRow[]), ...(lapRows as FeeRow[])];
   } finally {
     await browser.close();
   }
 }
-function parseSeylanTariffTable(html: string, product: string, now: string): FeeRow[] {
-  const dom = new JSDOM(html);
-  const doc = dom.window.document;
-  const out: FeeRow[] = [];
-  const trs = Array.from(doc.querySelectorAll("tbody tr"));
-  let groupDesc = ""; // the main group/heading (bold in Description col)
-  for (let i = 0; i < trs.length; ++i) {
-    const tds = Array.from(trs[i].querySelectorAll("td")).map(td => clean(td.textContent || ""));
-    if (tds.length < 2) continue;
-    // If description cell is bold (main group), treat as new group
-    const descCell = trs[i].querySelector(".row-two-value");
-    const isBold = descCell?.querySelector("b") != null;
-    if (isBold && tds[2] === "") {
-      // Group/heading row (e.g., Mortgage Bond, Valuation Fee, etc)
-      groupDesc = tds[1];
-      continue; // No fee on group header, skip to children
-    }
-    // For the first row under a group, if isBold and has fee, it's also a group/heading
-    if (isBold && tds[2] !== "") {
-      groupDesc = tds[1];
-      out.push({
-        bank: "Seylan",
-        products: [product],
-        feeType: groupDesc,
-        description: groupDesc,
-        amount: tds[2],
-        updatedAt: now,
-        source: URL,
-      });
-      continue;
-    }
-    // Sub-row under a group
-    out.push({
-      bank: "Seylan",
-      products: [product],
-      feeType: tds[1],
-      description: groupDesc,
-      amount: tds[2],
-      updatedAt: now,
-      source: URL,
-    });
-  }
-  return out;
-}
-
-export default scrapeSeylanTariff;
