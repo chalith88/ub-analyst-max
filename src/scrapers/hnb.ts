@@ -1,7 +1,8 @@
-import { chromium, Page } from "playwright";
+import { Page } from "playwright";
 import { RateRow } from "../types-minimal";
 import { acceptAnyCookie, clickLeftMenu } from "../utils/dom";
 import { clean, decideType, expandTenureYears, fanOutByYears, normalizeAwpr } from "../utils/text";
+import { launchBrowser } from "../utils/browser";
 
 const URL = "https://hnb.lk/interest-rates";
 
@@ -71,10 +72,7 @@ function expandYearsLoose(label: string): number[] {
 // --- MAIN ENTRY --------------------------------------------------------------
 
 export async function scrapeHNB(opts?: { show?: boolean; slow?: number }): Promise<RateRow[]> {
-  const browser = await chromium.launch({
-    headless: !opts?.show,
-    slowMo: opts?.slow && opts.slow > 0 ? opts.slow : undefined
-  });
+  const browser = await launchBrowser(opts);
   const page = await browser.newPage({ viewport: { width: 1300, height: 900 } });
 
   const rows: RateRow[] = [];

@@ -34,6 +34,10 @@
     "src/scrapers/hnb.ts",
     "src/scrapers/ndb.ts", 
     "src/scrapers/seylan.ts",
+    "src/scrapers/unionb.ts",
+    "src/scrapers/peoples.ts",
+    "src/scrapers/boc.ts",
+    "src/scrapers/nsb.ts",
     "src/types.ts"
   ]
 }
