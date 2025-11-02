@@ -21,8 +21,8 @@ import { scrapeCargills } from "./scrapers/cargills";
 import { scrapeNTB } from "./scrapers/ntb";
 import { scrapeAmana } from "./scrapers/amana";
 import { scrapeCBSL } from "./scrapers/cbsl";
-import { scrapeHnbTariff } from "./scrapers/hnb-tariff";
-import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";
+// import { scrapeHnbTariff } from "./scrapers/hnb-tariff";  // Disabled - uses jsdom
+// import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";  // Disabled - uses jsdom
 import { scrapeSampathTariff } from "./scrapers/sampath-tariff";
 import { scrapeCombankTariff } from "./scrapers/combank_tariff";
 import { scrapeNdbTariff } from "./scrapers/ndb-tariff";
@@ -130,29 +130,31 @@ function mergeTariffsByKey(existing: TariffRow[], incoming: TariffRow[]): Tariff
   return [...map.values()];
 }
 
-app.get("/", (_req, res) => {
+app.get("/", (req, res) => {
+  const baseUrl = isProduction ? "https://ub-analyst-max-final.onrender.com" : `http://localhost:${PORT}`;
   res.type("text/plain").send(
     [
-      "UB Scraper API",
+      "UB Scraper API - Sri Lankan Bank Interest Rate Scraper",
+      `Environment: ${isProduction ? 'Production' : 'Development'}`,
       "",
-      `HNB                : http://localhost:${PORT}/scrape/hnb?show=true&slow=200`,
-      `Seylan             : http://localhost:${PORT}/scrape/seylan?show=true&slow=200`,
-      `Sampath            : http://localhost:${PORT}/scrape/sampath?show=true`,
-      `ComBank            : http://localhost:${PORT}/scrape/combank?show=true&slow=200`,
-      `NDB                : http://localhost:${PORT}/scrape/ndb?show=true&slow=200`,
-      `UnionBank          : http://localhost:${PORT}/scrape/unionb?show=true&slow=200`,
-      `Peoples            : http://localhost:${PORT}/scrape/peoples?show=true&slow=200`,
-      `DFCC               : http://localhost:${PORT}/scrape/dfcc?show=true&slow=200`,
-      `NSB                : http://localhost:${PORT}/scrape/nsb?show=true&slow=200`,
-      `BOC                : http://localhost:${PORT}/scrape/boc?show=true&slow=200`,
-      `Cargills           : http://localhost:${PORT}/scrape/cargills?show=true&slow=200`,
-      `NTB                : http://localhost:${PORT}/scrape/ntb`,
-      `Amana              : http://localhost:${PORT}/scrape/amana`,
-      `CBSL               : http://localhost:${PORT}/scrape/cbsl`,
-      `HNB Tariff         : http://localhost:${PORT}/scrape/hnb-tariff?show=true&slow=200`,
-      `Seylan Tariff      : http://localhost:${PORT}/scrape/seylan-tariff?show=true&slow=200`,
-      `Sampath Tariff     : http://localhost:${PORT}/scrape/sampath-tariff?show=true&slow=200`,
-      `ComBank Tariff     : http://localhost:${PORT}/scrape/combank_tariff?show=true&slow=200`,
+      `HNB                : ${baseUrl}/scrape/hnb?show=true&slow=200`,
+      `Seylan             : ${baseUrl}/scrape/seylan?show=true&slow=200`,
+      `Sampath            : ${baseUrl}/scrape/sampath?show=true`,
+      `ComBank            : ${baseUrl}/scrape/combank?show=true&slow=200`,
+      `NDB                : ${baseUrl}/scrape/ndb?show=true&slow=200`,
+      `UnionBank          : ${baseUrl}/scrape/unionb?show=true&slow=200`,
+      `Peoples            : ${baseUrl}/scrape/peoples?show=true&slow=200`,
+      `DFCC               : ${baseUrl}/scrape/dfcc?show=true&slow=200`,
+      `NSB                : ${baseUrl}/scrape/nsb?show=true&slow=200`,
+      `BOC                : ${baseUrl}/scrape/boc?show=true&slow=200`,
+      `Cargills           : ${baseUrl}/scrape/cargills?show=true&slow=200`,
+      `NTB                : ${baseUrl}/scrape/ntb`,
+      `Amana              : ${baseUrl}/scrape/amana`,
+      `CBSL               : ${baseUrl}/scrape/cbsl`,
+      `HNB Tariff         : ${baseUrl}/scrape/hnb-tariff (temporarily disabled)`,
+      `Seylan Tariff      : ${baseUrl}/scrape/seylan-tariff (temporarily disabled)`,
+      `Sampath Tariff     : ${baseUrl}/scrape/sampath-tariff?show=true&slow=200`,
+      `ComBank Tariff     : ${baseUrl}/scrape/combank_tariff?show=true&slow=200`,
       `NDB Tariff         : http://localhost:${PORT}/scrape/ndb-tariff?show=true&slow=200`,
       `UnionBank Tariff   : http://localhost:${PORT}/scrape/unionb-tariff?show=true&slow=200`,
       `DFCC Tariff        : http://localhost:${PORT}/scrape/dfcc-tariff?show=true&slow=200`,
@@ -630,25 +632,14 @@ app.get("/scrape/cbsl", async (req, res) => {
   }
 });
 
-/** HNB-Tariff */
+/** HNB-Tariff - Temporarily disabled */
 app.get("/scrape/hnb-tariff", async (req, res) => {
-  try {
-    const data = await scrapeHnbTariff({ show: req.query.show === "true", slow: Number(req.query.slow || 0) });
-    res.json(data);
-  } catch (e: any) { res.status(500).json({ error: String(e?.message || e) }); }
+  res.status(503).json({ error: "HNB tariff scraper temporarily disabled due to deployment issues" });
 });
 
-/** Seylan-Tariff */
+/** Seylan-Tariff - Temporarily disabled */
 app.get("/scrape/seylan-tariff", async (req, res) => {
-  try {
-    const data = await scrapeSeylanTariff({
-      show: req.query.show === "true",
-      slow: Number(req.query.slow || 0)
-    });
-    res.json(data);
-  } catch (e: any) {
-    res.status(500).json({ error: String(e?.message || e) });
-  }
+  res.status(503).json({ error: "Seylan tariff scraper temporarily disabled due to deployment issues" });
 });
 
 /** Sampath-Tariff */

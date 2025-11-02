@@ -1223,8 +1223,9 @@ function UBRateAnalyst() {
     return [...rows].sort((a, b) => a.rate - b.rate)[0];
   }
 
-  const API_BASE =
-    import.meta.env.DEV ? "" : (window as any).__UB_BASE__ || "http://localhost:3000";
+  const API_BASE = import.meta.env.DEV 
+    ? "" 
+    : (window.location.origin || "https://ub-analyst-max-final.onrender.com");
 
   return (
     <div
