@@ -936,39 +936,14 @@ if (isProduction) {
   });
 }
 
-/* ---------------- Verify static files setup ---------------- */
-const verifyStaticFiles = async () => {
-  if (isProduction) {
-    const clientBuildPath = path.join(__dirname, "../client/dist");
-    console.log(`🔍 Verifying static files at: ${clientBuildPath}`);
-    
-    try {
-      await fs.access(clientBuildPath);
-      console.log("✅ Static files directory found");
-      
-      // Check for key files
-      try {
-        await fs.access(path.join(clientBuildPath, "index.html"));
-        console.log("✅ index.html found");
-      } catch {
-        console.error("❌ index.html not found");
-      }
-      
-    } catch (err) {
-      console.error(`❌ Client build directory not found: ${clientBuildPath}`);
-      console.error("Frontend may not be accessible");
-    }
-  }
-};
+
 
 /* ---------------- Start server ---------------- */
-app.listen(PORT, '0.0.0.0', async () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 UB Scraper API running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Server accessible at: ${isProduction ? 'https://ub-analyst-max-final.onrender.com' : `http://localhost:${PORT}`}`);
-  
-  // Verify static files setup
-  await verifyStaticFiles();
+  console.log(`✅ Server started successfully`);
 });
 
 
