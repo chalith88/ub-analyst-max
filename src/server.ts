@@ -991,7 +991,7 @@ if (isProduction) {
 
 /* ---------------- Start server ---------------- */
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 UB Scraper API running on port ${PORT}`);
+  console.log(`🚀 UB Analyst Max API running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Server accessible at: ${isProduction ? 'https://ub-analyst-max-final.onrender.com' : `http://localhost:${PORT}`}`);
   console.log(`✅ Server started successfully`);
