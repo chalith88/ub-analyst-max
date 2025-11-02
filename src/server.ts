@@ -926,22 +926,27 @@ const setupStaticFiles = async () => {
     try {
       await fs.access(clientBuildPath);
       
-      // Serve static files
+      // Serve static files (JS, CSS, images, etc.)
       app.use(express.static(clientBuildPath));
       console.log("✅ Static files configured successfully");
       
-      // SPA catch-all route - serve React app for root and frontend routes
-      app.get('/', (req, res) => {
-        res.sendFile(path.join(clientBuildPath, "index.html"));
-      });
-      
-      // Catch-all for other frontend routes (SPA routing)
+      // SPA catch-all route - must be added AFTER all API routes
       app.get('*', (req, res) => {
-        // Don't serve React app for API routes
-        if (req.path.startsWith('/scrape') || req.path.startsWith('/api') || 
-            req.path === '/health' || req.path === '/debug' || req.path === '/endpoints') {
-          res.status(404).json({ error: 'API endpoint not found' });
-          return;
+        // Don't serve React app for API routes or asset files
+        if (req.path.startsWith('/scrape') || 
+            req.path.startsWith('/api') || 
+            req.path === '/health' || 
+            req.path === '/debug' || 
+            req.path === '/endpoints' ||
+            req.path.startsWith('/assets/') ||
+            req.path.endsWith('.js') ||
+            req.path.endsWith('.css') ||
+            req.path.endsWith('.map') ||
+            req.path.endsWith('.png') ||
+            req.path.endsWith('.jpg') ||
+            req.path.endsWith('.ico') ||
+            req.path.endsWith('.svg')) {
+          return; // Let static file serving or other routes handle these
         }
         
         // Serve React app for all other routes (SPA routing)
