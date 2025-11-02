@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import cors from "cors";
 import fetch from "node-fetch";
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 import { XMLParser } from "fast-xml-parser";
 
 import { scrapeHNB } from "./scrapers/hnb";
@@ -394,32 +394,31 @@ async function fetchCbslPressReleases(): Promise<NewsArticle[]> {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
-    const dom = new JSDOM(html);
-    const doc = dom.window.document;
-    const rows = Array.from(doc.querySelectorAll(".item-list li.views-row")).slice(0, 8);
+    const $ = cheerio.load(html);
+    const rows = $(".item-list li.views-row").slice(0, 8);
     const items: NewsArticle[] = [];
-    for (const row of rows) {
-      const anchor = (row as any).querySelector(".views-field-field-file-title a");
-      if (!anchor) continue;
-      const href = anchor.href.startsWith("http") ? anchor.href : new URL(anchor.href, CBSL_PRESS_URL).href;
-      const title = anchor.textContent?.trim() || "CBSL Press Release";
-      const dateMatch = href.match(/press_(\d{4})(\d{2})(\d{2})/i);
+    rows.each((i, row) => {
+      const anchor = $(row).find(".views-field-field-file-title a");
+      if (!anchor.length) return;
+      const href = anchor.attr("href");
+      if (!href) return;
+      const dateMatch = fullHref.match(/press_(\d{4})(\d{2})(\d{2})/i);
       const publishedAt = dateMatch
         ? new Date(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}T06:00:00Z`).toISOString()
         : new Date().toISOString();
       const summary = `Central Bank update: ${title}`;
-      const id = Buffer.from(`CBSL:${href}`).toString("base64").replace(/=+$/, "");
+      const id = Buffer.from(`CBSL:${fullHref}`).toString("base64").replace(/=+$/, "");
       items.push({
         id,
         title,
         summary,
-        link: href,
+        link: fullHref,
         source: "CBSL Press Releases",
         publishedAt,
         topics: ["Policy & Regulation", "Banking & Finance"],
         origin: "CBSL",
       });
-    }
+    });
     return items;
   } catch (err) {
     console.error("[news] Failed to fetch CBSL press releases:", err);
@@ -870,7 +869,7 @@ app.get("/scrape/tariffs-all", async (req, res) => {
 
       try {
         const url = qs(key);
-        const rsp = await fetch(url, { cache: "no-store" });
+        const rsp = await fetch(url);
         if (!rsp.ok) throw new Error(`${rsp.status} ${rsp.statusText}`);
         const data = await rsp.json();
         rows = arr<TariffRow>(data);
