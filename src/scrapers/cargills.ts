@@ -1,6 +1,6 @@
 // src/scrapers/cargills.ts
 import { chromium, Browser, Page } from "playwright";
-import type { RateRow } from "../types";
+import type { RateRow } from "../types-minimal";
 
 /** ------------------------------------------------------------------------
  * Cargills Bank – Lending Rates scraper

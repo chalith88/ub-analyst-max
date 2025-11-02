@@ -1,6 +1,6 @@
 // src/scrapers/peoples.ts
 import { chromium, Page, Locator } from "playwright";
-import { RateRow } from "../types";
+import { RateRow } from "../types-minimal";
 
 const URL = "https://www.peoplesbank.lk/interest-rates/";
 

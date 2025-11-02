@@ -1,6 +1,6 @@
 // src/scrapers/boc.ts
 import { chromium, Browser, Page, ElementHandle } from "playwright";
-import type { RateRow } from "../types";
+import type { RateRow } from "../types-minimal";
 
 const SRC = "https://www.boc.lk/rates-tariff#advance-rates";
 const BANK = "Bank of Ceylon";

@@ -1,5 +1,5 @@
 // src/scrapers/ntb.ts
-import type { RateRow } from "../types";
+import type { RateRow } from "../types-minimal";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import fetch from "node-fetch";
 

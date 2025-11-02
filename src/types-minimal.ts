@@ -4,7 +4,7 @@ export interface RateRow {
   product: string;
   productType?: string;
   tenureLabel?: string;
-  tenureYears?: number[];
+  tenureYears?: number[] | number;
   rateWithSalary?: string;
   rateWithoutSalary?: string;
   notes?: string;

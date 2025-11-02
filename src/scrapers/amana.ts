@@ -1,6 +1,6 @@
 // src/scrapers/amana.ts
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import type { RateRow } from "../types";
+import type { RateRow } from "../types-minimal";
 
 const SRC =
   "https://www.amanabank.lk/pdf/tariff/advance-pricing-november-2024-english.pdf";

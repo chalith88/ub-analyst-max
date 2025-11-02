@@ -1,5 +1,5 @@
 import { chromium, Page } from "playwright";
-import { RateRow } from "../types";
+import { RateRow } from "../types-minimal";
 import { acceptAnyCookie, clickLeftMenu } from "../utils/dom";
 import { clean, decideType, expandTenureYears, fanOutByYears, normalizeAwpr } from "../utils/text";
 

@@ -1,6 +1,6 @@
 // src/scrapers/combank.ts
 import { chromium, Locator, Page } from "playwright";
-import { RateRow } from "../types";
+import { RateRow } from "../types-minimal";
 import { acceptAnyCookie } from "../utils/dom";
 import {
   clean,

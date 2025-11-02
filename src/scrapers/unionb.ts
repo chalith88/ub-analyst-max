@@ -1,5 +1,5 @@
 import { chromium, Page, Locator } from "playwright";
-import { RateRow } from "../types";
+import { RateRow } from "../types-minimal";
 import { clean } from "../utils/text";
 
 const URL = "https://www.unionb.com/interest-rates/loans/";

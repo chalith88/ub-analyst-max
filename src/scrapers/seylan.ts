@@ -1,6 +1,6 @@
 // src/scrapers/seylan.ts
 import { chromium, Page, Locator } from "playwright";
-import { RateRow } from "../types";
+import { RateRow } from "../types-minimal";
 import { acceptAnyCookie } from "../utils/dom";
 import { clean, fanOutByYears } from "../utils/text";
 

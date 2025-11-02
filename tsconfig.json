@@ -31,6 +31,9 @@
     "src/scrapers/unionb-tariff.ts",
     "src/scrapers/seylan-tariff.ts",
     "src/scrapers/ndb-tariff.ts",
+    "src/scrapers/hnb.ts",
+    "src/scrapers/ndb.ts", 
+    "src/scrapers/seylan.ts",
     "src/types.ts"
   ]
 }
