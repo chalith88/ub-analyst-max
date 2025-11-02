@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: ub-analyst-max
+    env: node
+    region: oregon
+    buildCommand: npm run build && npx playwright install chromium
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PLAYWRIGHT_HEADLESS
+        value: true
+      - key: PORT
+        fromService:
+          type: web
+          name: ub-analyst-max
+          property: port
+    healthCheckPath: /health
+    disk:
+      name: ub-analyst-max-disk
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+    plan: free
