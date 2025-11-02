@@ -37,12 +37,12 @@ WORKDIR /app
 
 # Copy package files for backend
 COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps
+RUN npm install --only=production --legacy-peer-deps
 
 # Copy package files for frontend
 COPY client/package*.json ./client/
 WORKDIR /app/client
-RUN npm ci --only=production --legacy-peer-deps
+RUN npm install --only=production --legacy-peer-deps
 
 # Go back to root
 WORKDIR /app
