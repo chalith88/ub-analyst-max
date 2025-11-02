@@ -12,7 +12,7 @@
     "test:tariff": "ts-node -T src/tariff/normalize.run.ts"
   },
   "dependencies": {
-    "canvas": "2.11.2",
+    "canvas": "^3.0.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "fast-xml-parser": "^4.5.0",

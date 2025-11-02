@@ -1,7 +1,7 @@
 # Use Node.js 18 with Debian base for better Playwright support
 FROM node:18-bullseye
 
-# Install system dependencies for Playwright
+# Install system dependencies for Playwright and Canvas
 RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libasound2 \
@@ -24,6 +24,12 @@ RUN apt-get update && apt-get install -y \
     libu2f-udev \
     libvulkan1 \
     xdg-utils \
+    build-essential \
+    libcairo2-dev \
+    libgif-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
+    librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -31,12 +37,12 @@ WORKDIR /app
 
 # Copy package files for backend
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --only=production --legacy-peer-deps
 
 # Copy package files for frontend
 COPY client/package*.json ./client/
 WORKDIR /app/client
-RUN npm ci --only=production
+RUN npm ci --only=production --legacy-peer-deps
 
 # Go back to root
 WORKDIR /app
