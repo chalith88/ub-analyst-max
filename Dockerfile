@@ -44,7 +44,7 @@ RUN npm install --only=production --legacy-peer-deps
 COPY . .
 
 # Build TypeScript backend
-RUN npx tsc
+RUN npx tsc && ls -la dist/ && echo "TypeScript compilation complete"
 
 # Install frontend dependencies
 WORKDIR /app/client
