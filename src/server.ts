@@ -399,7 +399,7 @@ async function fetchCbslPressReleases(): Promise<NewsArticle[]> {
     const rows = Array.from(doc.querySelectorAll(".item-list li.views-row")).slice(0, 8);
     const items: NewsArticle[] = [];
     for (const row of rows) {
-      const anchor = row.querySelector<HTMLAnchorElement>(".views-field-field-file-title a");
+      const anchor = (row as any).querySelector(".views-field-field-file-title a");
       if (!anchor) continue;
       const href = anchor.href.startsWith("http") ? anchor.href : new URL(anchor.href, CBSL_PRESS_URL).href;
       const title = anchor.textContent?.trim() || "CBSL Press Release";
@@ -881,7 +881,7 @@ app.get("/scrape/tariffs-all", async (req, res) => {
       stats[key] = { count: rows.length, ...(error ? { error } : {}) };
       if (rows.length) {
         // normalize minimal fields just in case, then merge
-        const normalized = rows.map((r) => ({
+        const normalized = rows.map((r: any) => ({
           bank: r.bank,
           product: r.product,
           feeType: r.feeType,
@@ -896,7 +896,7 @@ app.get("/scrape/tariffs-all", async (req, res) => {
           updatedAt: r.updatedAt || new Date().toISOString(),
           source: r.source,
           description: r.description || "",
-        })) as TariffRow[];
+        })) as any[];
 
         const merged = mergeTariffsByKey(allRows, normalized);
         allRows.length = 0;

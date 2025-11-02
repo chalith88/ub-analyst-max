@@ -12,6 +12,13 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "allowSyntheticDefaultImports": true,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+
     "types": ["node"],
     "lib": ["ES2020", "DOM"],
     "moduleResolution": "node"
@@ -21,6 +28,9 @@
     "src/**/*.spec.ts", 
     "src/utils.ts",
     "src/scrapers/unionb-tariff-lines.ts",
-    "src/scrapers/unionb-tariff.ts"
+    "src/scrapers/unionb-tariff.ts",
+    "src/scrapers/seylan-tariff.ts",
+    "src/scrapers/ndb-tariff.ts",
+    "src/types.ts"
   ]
 }
