@@ -40,23 +40,21 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production --legacy-peer-deps
 
-# Copy package files for frontend
-COPY client/package*.json ./client/
+# Copy all source code
+COPY . .
+
+# Install frontend dependencies
 WORKDIR /app/client
 RUN npm install --legacy-peer-deps
+
+# Build React frontend
+RUN npm run build
 
 # Go back to root
 WORKDIR /app
 
-# Copy all source code
-COPY . .
-
 # Install Playwright browsers
 RUN npx playwright install chromium
-
-# Build React frontend
-WORKDIR /app/client
-RUN npm run build
 
 # Go back to root
 WORKDIR /app
