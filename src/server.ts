@@ -51,15 +51,22 @@ app.use(cors({
 }));
 
 // Health check endpoint for Railway
-app.get("/api/health", (req, res) => {
+app.get("/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
-// Serve static files from client build in production
-if (isProduction) {
-  const clientBuildPath = path.join(__dirname, "../client/dist");
-  app.use(express.static(clientBuildPath));
-}
+// Debug endpoint to check server status
+app.get("/debug", (req, res) => {
+  res.json({
+    status: "UB Analyst Max API",
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT,
+    timestamp: new Date().toISOString(),
+    version: "1.0.0"
+  });
+});
+
+// Configure static files - will be set up after server starts
 
 const ensureOutputDir = async () => {
   const outDir = path.join(process.cwd(), "output");
@@ -917,9 +924,32 @@ if (isProduction) {
   });
 }
 
+/* ---------------- Setup static files ---------------- */
+const setupStaticFiles = async () => {
+  if (isProduction) {
+    // Since we're using ts-node, __dirname points to src/, so client is at ../client/dist
+    const clientBuildPath = path.join(__dirname, "../client/dist");
+    console.log(`🔍 Checking for static files at: ${clientBuildPath}`);
+    
+    try {
+      await fs.access(clientBuildPath);
+      app.use(express.static(clientBuildPath));
+      console.log("✅ Static files configured successfully");
+    } catch (err) {
+      console.error(`❌ Client build directory not found: ${clientBuildPath}`);
+      console.error("Frontend may not be accessible");
+    }
+  }
+};
+
 /* ---------------- Start server ---------------- */
-app.listen(PORT, () => {
-  console.log(`🚀 UB Scraper API running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🚀 UB Scraper API running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Server accessible at: ${isProduction ? 'https://ub-analyst-max-final.onrender.com' : `http://localhost:${PORT}`}`);
+  
+  // Setup static files after server starts
+  await setupStaticFiles();
 });
 
 
