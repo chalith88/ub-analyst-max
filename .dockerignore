@@ -10,7 +10,6 @@ README.md
 tmp
 work_*
 ocr
-output
 .env.local
 .env.*.local
 playwright-report
