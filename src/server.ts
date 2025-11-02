@@ -66,7 +66,12 @@ app.get("/debug", (req, res) => {
   });
 });
 
-// Configure static files - will be set up after server starts
+// Serve static files from client build in production
+if (isProduction) {
+  const clientBuildPath = path.join(__dirname, "../client/dist");
+  console.log(`🔍 Setting up static files from: ${clientBuildPath}`);
+  app.use(express.static(clientBuildPath));
+}
 
 const ensureOutputDir = async () => {
   const outDir = path.join(process.cwd(), "output");
@@ -908,52 +913,46 @@ app.get("/scrape/tariffs-all", async (req, res) => {
   }
 });
 
-// SPA fallback - serve index.html for all non-API routes (must be last)
+// SPA fallback - serve index.html for all non-API, non-asset routes (must be last)
 if (isProduction) {
   app.get("*", (req, res) => {
+    // Don't serve React app for asset files - let them 404 properly
+    if (req.path.startsWith('/assets/') ||
+        req.path.endsWith('.js') ||
+        req.path.endsWith('.css') ||
+        req.path.endsWith('.map') ||
+        req.path.endsWith('.png') ||
+        req.path.endsWith('.jpg') ||
+        req.path.endsWith('.ico') ||
+        req.path.endsWith('.svg') ||
+        req.path.endsWith('.woff') ||
+        req.path.endsWith('.woff2') ||
+        req.path.endsWith('.ttf')) {
+      return res.status(404).send('Asset not found');
+    }
+    
     const clientBuildPath = path.join(__dirname, "../client/dist");
     res.sendFile(path.join(clientBuildPath, "index.html"));
   });
 }
 
-/* ---------------- Setup static files and SPA routes ---------------- */
-const setupStaticFiles = async () => {
+/* ---------------- Verify static files setup ---------------- */
+const verifyStaticFiles = async () => {
   if (isProduction) {
-    // Since we're using ts-node, __dirname points to src/, so client is at ../client/dist
     const clientBuildPath = path.join(__dirname, "../client/dist");
-    console.log(`🔍 Checking for static files at: ${clientBuildPath}`);
+    console.log(`🔍 Verifying static files at: ${clientBuildPath}`);
     
     try {
       await fs.access(clientBuildPath);
+      console.log("✅ Static files directory found");
       
-      // Serve static files (JS, CSS, images, etc.)
-      app.use(express.static(clientBuildPath));
-      console.log("✅ Static files configured successfully");
-      
-      // SPA catch-all route - must be added AFTER all API routes
-      app.get('*', (req, res) => {
-        // Don't serve React app for API routes or asset files
-        if (req.path.startsWith('/scrape') || 
-            req.path.startsWith('/api') || 
-            req.path === '/health' || 
-            req.path === '/debug' || 
-            req.path === '/endpoints' ||
-            req.path.startsWith('/assets/') ||
-            req.path.endsWith('.js') ||
-            req.path.endsWith('.css') ||
-            req.path.endsWith('.map') ||
-            req.path.endsWith('.png') ||
-            req.path.endsWith('.jpg') ||
-            req.path.endsWith('.ico') ||
-            req.path.endsWith('.svg')) {
-          return; // Let static file serving or other routes handle these
-        }
-        
-        // Serve React app for all other routes (SPA routing)
-        res.sendFile(path.join(clientBuildPath, "index.html"));
-      });
-      
-      console.log("✅ SPA routing configured successfully");
+      // Check for key files
+      try {
+        await fs.access(path.join(clientBuildPath, "index.html"));
+        console.log("✅ index.html found");
+      } catch {
+        console.error("❌ index.html not found");
+      }
       
     } catch (err) {
       console.error(`❌ Client build directory not found: ${clientBuildPath}`);
@@ -968,8 +967,8 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Server accessible at: ${isProduction ? 'https://ub-analyst-max-final.onrender.com' : `http://localhost:${PORT}`}`);
   
-  // Setup static files after server starts
-  await setupStaticFiles();
+  // Verify static files setup
+  await verifyStaticFiles();
 });
 
 
