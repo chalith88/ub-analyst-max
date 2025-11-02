@@ -1,5 +1,5 @@
 // src/scrapers/combank.ts
-import { chromium, Locator, Page } from "playwright";
+import { Locator, Page } from "playwright";
 import { RateRow } from "../types-minimal";
 import { acceptAnyCookie } from "../utils/dom";
 import {
@@ -9,6 +9,7 @@ import {
   fanOutByYears,
   normalizeAwpr,
 } from "../utils/text";
+import { launchBrowser } from "../utils/browser";
 
 const URL = "https://www.combank.lk/rates-tariff#lending-rates";
 
@@ -292,10 +293,7 @@ async function scrapeEducationFromAllOtherAdvances(block: Locator, nowISO: strin
 export async function scrapeCombank(
   opts?: { show?: boolean; slow?: number }
 ): Promise<RateRow[]> {
-  const browser = await chromium.launch({
-    headless: !opts?.show,
-    slowMo: opts?.slow && opts.slow > 0 ? opts.slow : undefined,
-  });
+  const browser = await launchBrowser(opts);
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
 
   const rows: RateRow[] = [];

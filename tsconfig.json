@@ -38,6 +38,7 @@
     "src/scrapers/peoples.ts",
     "src/scrapers/boc.ts",
     "src/scrapers/nsb.ts",
+    "src/scrapers/combank.ts",
     "src/types.ts"
   ]
 }
