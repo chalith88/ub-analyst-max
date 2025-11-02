@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libpango1.0-dev \
     librsvg2-dev \
+    libgbm1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -42,7 +43,7 @@ RUN npm install --only=production --legacy-peer-deps
 # Copy package files for frontend
 COPY client/package*.json ./client/
 WORKDIR /app/client
-RUN npm install --only=production --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Go back to root
 WORKDIR /app
