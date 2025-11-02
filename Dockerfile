@@ -47,9 +47,6 @@ COPY . .
 # Install Playwright browsers
 RUN npx playwright install chromium
 
-# Build TypeScript backend
-RUN npx tsc
-
 # Build React frontend
 WORKDIR /app/client
 RUN npm run build
@@ -64,5 +61,5 @@ EXPOSE $PORT
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_HEADLESS=true
 
-# Start the server
-CMD ["node", "dist/server.js"]
+# Start the server with ts-node
+CMD ["npx", "ts-node", "-T", "src/server.ts"]
