@@ -9,11 +9,11 @@ import { XMLParser } from "fast-xml-parser";
 
 import { scrapeHNB } from "./scrapers/hnb";
 import { scrapeSeylan } from "./scrapers/seylan";
-import { scrapeSampath } from "./scrapers/sampath";    // PDF parser
+// import { scrapeSampath } from "./scrapers/sampath";    // PDF parser - DISABLED
 import { scrapeCombank } from "./scrapers/combank";
 import { scrapeNDB } from "./scrapers/ndb";
 import { scrapeUnionBank } from "./scrapers/unionb";
-import { scrapePeoples } from "./scrapers/peoples";
+// import { scrapePeoples } from "./scrapers/peoples";    // PDF parser - DISABLED
 import { scrapeDFCC } from "./scrapers/dfcc";
 import { scrapeNSB } from "./scrapers/nsb";
 import { scrapeBOC } from "./scrapers/boc";
@@ -23,7 +23,7 @@ import { scrapeAmana } from "./scrapers/amana";
 import { scrapeCBSL } from "./scrapers/cbsl";
 import { scrapeHnbTariff } from "./scrapers/hnb-tariff";
 import { scrapeSeylanTariff } from "./scrapers/seylan-tariff";
-import { scrapeSampathTariff } from "./scrapers/sampath-tariff";
+// import { scrapeSampathTariff } from "./scrapers/sampath-tariff";  // PDF/OCR - DISABLED
 import { scrapeCombankTariff } from "./scrapers/combank_tariff";
 import { scrapeNdbTariff } from "./scrapers/ndb-tariff";
 import { scrapeUnionbTariff } from "./scrapers/unionb-tariff";
@@ -33,7 +33,7 @@ import { scrapeBocTariff } from "./scrapers/boc-tariff";
 import { scrapeCargillsTariff } from "./scrapers/cargills-tariff";
 import { scrapeNtbTariff } from "./scrapers/ntb-tariff";
 import { scrapeAmanaTariff } from "./scrapers/amana-tariff";
-import { scrapePeoplesTariff } from "./scrapers/peoples-tariff";
+// import { scrapePeoplesTariff } from "./scrapers/peoples-tariff";  // PDF/OCR - DISABLED
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -106,11 +106,11 @@ interface TariffRow {
   description?: string;
 }
 
-/** The same keys you used for individual tariff endpoints */
+/** The same keys you used for individual tariff endpoints (excluding PDF-based ones) */
 const TARIFF_SCRAPER_KEYS = [
-  "hnb-tariff", "seylan-tariff", "sampath-tariff", "combank-tariff",
+  "hnb-tariff", "seylan-tariff", /* "sampath-tariff", */ "combank-tariff",
   "ndb-tariff", "unionb-tariff", "dfcc-tariff", "nsb-tariff",
-  "boc-tariff", "cargills-tariff", "ntb-tariff", "amana-tariff", "peoples-tariff",
+  "boc-tariff", "cargills-tariff", "ntb-tariff", "amana-tariff", /* "peoples-tariff", */
 ] as const;
 
 /** Safe array coerce */
@@ -145,11 +145,11 @@ app.get("/endpoints", (req, res) => {
       "",
       `HNB                : ${baseUrl}/scrape/hnb?show=true&slow=200`,
       `Seylan             : ${baseUrl}/scrape/seylan?show=true&slow=200`,
-      `Sampath            : ${baseUrl}/scrape/sampath?show=true`,
+      `Sampath            : ${baseUrl}/scrape/sampath (PDF scraper - disabled in production)`,
       `ComBank            : ${baseUrl}/scrape/combank?show=true&slow=200`,
       `NDB                : ${baseUrl}/scrape/ndb?show=true&slow=200`,
       `UnionBank          : ${baseUrl}/scrape/unionb?show=true&slow=200`,
-      `Peoples            : ${baseUrl}/scrape/peoples?show=true&slow=200`,
+      `Peoples            : ${baseUrl}/scrape/peoples (PDF scraper - disabled in production)`,
       `DFCC               : ${baseUrl}/scrape/dfcc?show=true&slow=200`,
       `NSB                : ${baseUrl}/scrape/nsb?show=true&slow=200`,
       `BOC                : ${baseUrl}/scrape/boc?show=true&slow=200`,
@@ -159,8 +159,8 @@ app.get("/endpoints", (req, res) => {
       `CBSL               : ${baseUrl}/scrape/cbsl`,
       `HNB Tariff         : ${baseUrl}/scrape/hnb-tariff (temporarily disabled)`,
       `Seylan Tariff      : ${baseUrl}/scrape/seylan-tariff (temporarily disabled)`,
-      `Sampath Tariff     : ${baseUrl}/scrape/sampath-tariff?show=true&slow=200`,
-      `ComBank Tariff     : ${baseUrl}/scrape/combank_tariff?show=true&slow=200`,
+      `Sampath Tariff     : ${baseUrl}/scrape/sampath-tariff (OCR required - disabled)`,
+      `ComBank Tariff     : ${baseUrl}/scrape/combank-tariff?show=true&slow=200`,
       `NDB Tariff         : http://localhost:${PORT}/scrape/ndb-tariff?show=true&slow=200`,
       `UnionBank Tariff   : http://localhost:${PORT}/scrape/unionb-tariff?show=true&slow=200`,
       `DFCC Tariff        : http://localhost:${PORT}/scrape/dfcc-tariff?show=true&slow=200`,
@@ -168,8 +168,8 @@ app.get("/endpoints", (req, res) => {
       `BOC Tariff         : http://localhost:${PORT}/scrape/boc-tariff?show=true&slow=200`,
       `Cargills Tariff    : http://localhost:${PORT}/scrape/cargills-tariff?show=true&slow=200`,
       `NTB Tariff         : http://localhost:${PORT}/scrape/ntb-tariff?show=true&slow=200`,
-      `Amana Tariff       : http://localhost:${PORT}/scrape/amana-tariff?show=true&slow=200`,
-      `Peoples Tariff     : http://localhost:${PORT}/scrape/peoples-tariff?show=true&slow=200`,
+      `Amana Tariff       : ${baseUrl}/scrape/amana-tariff`,
+      `Peoples Tariff     : ${baseUrl}/scrape/peoples-tariff (OCR required - disabled)`,
       `ALL                : http://localhost:${PORT}/scrape/all?show=true&slow=200`,
       `Tariff ALL         : http://localhost:${PORT}/scrape/tariffs-all?show=true&slow=200`,
       "",
@@ -538,11 +538,17 @@ app.get("/scrape/seylan", async (req, res) => {
   } catch (e: any) { res.status(500).json({ error: String(e?.message || e) }); }
 });
 
-app.get("/scrape/sampath", (req, res) =>
-  handlePdfScrape(req, res, scrapeSampath,
-    "https://www.sampath.lk/common/loan/interest-rates-loan-and-advances.pdf",
-    "sampath.json", "Sampath")
-);
+// Sampath PDF scraper - disabled due to Canvas dependencies
+app.get("/scrape/sampath", async (req, res) => {
+  res.status(503).json({ 
+    error: "Sampath PDF scraper temporarily disabled in production", 
+    reason: "Canvas/PDF.js dependency not available in serverless environment",
+    alternative: "Use other bank scrapers for rate comparison",
+    bank: "Sampath",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
+});
 
 app.get("/scrape/combank", async (req, res) => {
   try {
@@ -568,14 +574,16 @@ app.get("/scrape/unionb", async (req, res) => {
   } catch (e: any) { res.status(500).json({ error: String(e?.message || e) }); }
 });
 
+// Peoples PDF scraper - disabled due to Canvas dependencies  
 app.get("/scrape/peoples", async (req, res) => {
-  try {
-    const data = await scrapePeoples("show" in req.query, req.query.slow ? Number(req.query.slow) : 0);
-    res.json(data);
-  } catch (err: any) {
-    console.error("Error scraping People's Bank:", err);
-    res.status(500).json({ error: err?.message || String(err) });
-  }
+  res.status(503).json({ 
+    error: "Peoples PDF scraper temporarily disabled in production",
+    reason: "Canvas/PDF.js dependency not available in serverless environment", 
+    alternative: "Use other bank scrapers for rate comparison",
+    bank: "Peoples",
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 app.get("/scrape/dfcc", async (req, res) => {
@@ -664,14 +672,26 @@ app.get("/scrape/seylan-tariff", async (req, res) => {
   }
 });
 
-/** Sampath-Tariff */
+/** Sampath-Tariff - disabled due to OCR dependencies */
 app.get("/scrape/sampath-tariff", async (req, res) => {
-  try {
-    const data = await scrapeSampathTariff();
-    res.json(data);
-  } catch (e: any) {
-    res.status(500).json({ error: String(e?.message || e) });
-  }
+  res.status(503).json({ 
+    error: "Sampath tariff scraper requires OCR tools not available in production",
+    reason: "Requires pdftoppm and tesseract for PDF text extraction",
+    alternative: "Manual PDF analysis or local development environment",
+    bank: "Sampath",
+    operation: "tariff scraping",
+    requiredTools: [
+      "pdftoppm (from poppler-utils package)",
+      "tesseract (OCR engine)"
+    ],
+    installInstructions: {
+      ubuntu: "sudo apt-get install poppler-utils tesseract-ocr",
+      macos: "brew install poppler tesseract",
+      windows: "Use WSL or manual installation"
+    },
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 /** NDB-Tariff */
@@ -793,18 +813,26 @@ app.get("/scrape/amana-tariff", async (req, res) => {
   }
 });
 
-/** Peoples-Tariff (OCR lines first pass) */
+/** Peoples-Tariff - disabled due to OCR dependencies */
 app.get("/scrape/peoples-tariff", async (req, res) => {
-  try {
-    const rows = await scrapePeoplesTariff({
-      show: String(req.query.show || ""),
-      slow: String(req.query.slow || ""),
-      save: String(req.query.save || ""),
-    });
-    res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ error: err?.message || String(err) });
-  }
+  res.status(503).json({ 
+    error: "Peoples tariff scraper requires OCR tools not available in production",
+    reason: "Requires pdftoppm and tesseract for PDF text extraction", 
+    alternative: "Manual PDF analysis or local development environment",
+    bank: "Peoples",
+    operation: "tariff scraping",
+    requiredTools: [
+      "pdftoppm (from poppler-utils package)",
+      "tesseract (OCR engine)"
+    ],
+    installInstructions: {
+      ubuntu: "sudo apt-get install poppler-utils tesseract-ocr",
+      macos: "brew install poppler tesseract",
+      windows: "Use WSL or manual installation"
+    },
+    scrapedAt: new Date().toISOString(),
+    rows: []
+  });
 });
 
 /* ---------------- ALL route ---------------- */
@@ -817,15 +845,11 @@ app.get("/scrape/all", async (req, res) => {
   const jobs = {
     HNB: () => scrapeHNB({ show, slow }),
     Seylan: () => scrapeSeylan({ show, slow }),
-    Sampath: async () => {
-      const outDir = await ensureOutputDir();
-      const outPath = path.join(outDir, "sampath.json");
-      return scrapeSampath("https://www.sampath.lk/common/loan/interest-rates-loan-and-advances.pdf", outPath);
-    },
+    // Sampath: DISABLED - PDF dependency issue
     ComBank: () => scrapeCombank({ show, slow }),
     NDB: () => scrapeNDB({ show, slow }),
     UnionBank: () => scrapeUnionBank({ show, slow }),
-    Peoples: () => scrapePeoples(show, slow),
+    // Peoples: DISABLED - PDF dependency issue
     DFCC: () => scrapeDFCC({ show, slow }),
     NSB: () => scrapeNSB({ show, slow }),
     BOC: () => scrapeBOC({ show: String(show), slow: String(slow), save: "false" } as any),
