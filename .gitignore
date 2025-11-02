@@ -40,9 +40,6 @@ tmp/
 temp/
 *.tmp
 
-# Output directory
-output/
-
 # Playwright browsers
 /test-results/
 /playwright-report/
