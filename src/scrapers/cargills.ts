@@ -1,5 +1,6 @@
 // src/scrapers/cargills.ts
-import { chromium, Browser, Page } from "playwright";
+import { Browser, Page } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import type { RateRow } from "../types-minimal";
 
 /** ------------------------------------------------------------------------
@@ -468,9 +469,9 @@ function emitHomeOrLAPSimple(
 
 /* ------------------------------ main scrape ------------------------------- */
 async function openBrowser(opts: Opts): Promise<{ browser: Browser; page: Page }> {
-  const browser = await chromium.launch({
-    headless: !(opts.show === "true"),
-    slowMo: opts.slow ? Number(opts.slow) : 0,
+  const browser = await launchBrowser({
+    show: opts.show === "true",
+    slow: opts.slow ? Number(opts.slow) : 0,
   });
   const page = await browser.newPage();
   return { browser, page };

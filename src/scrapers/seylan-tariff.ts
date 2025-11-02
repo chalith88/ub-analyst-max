@@ -1,6 +1,6 @@
 // src/scrapers/seylan-tariff.ts
 
-import { chromium } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import { clean } from "../utils/text";
 import { acceptAnyCookie } from "../utils/dom";
 import { JSDOM } from "jsdom";
@@ -18,9 +18,9 @@ export interface FeeRow {
 
 const URL = "https://www.seylan.lk/service-charges?category=HOUSING_LOAN_CHARGES";
 export async function scrapeSeylanTariff(opts?: { show?: boolean; slow?: number }): Promise<FeeRow[]> {
-  const browser = await chromium.launch({
-    headless: !opts?.show,
-    slowMo: opts?.slow && opts.slow > 0 ? opts.slow : undefined,
+  const browser = await launchBrowser({
+    show: opts?.show,
+    slow: opts?.slow && opts.slow > 0 ? opts.slow : undefined,
   });
   const page = await browser.newPage({ viewport: { width: 1300, height: 900 } });
   const now = new Date().toISOString();

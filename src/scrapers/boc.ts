@@ -1,5 +1,6 @@
 // src/scrapers/boc.ts
-import { chromium, Browser, Page, ElementHandle } from "playwright";
+import { Browser, Page, ElementHandle } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import type { RateRow } from "../types-minimal";
 
 const SRC = "https://www.boc.lk/rates-tariff#advance-rates";
@@ -114,7 +115,7 @@ export async function scrapeBOC(opts: Opts = {}): Promise<RateRow[]> {
   const updatedAt = nowISO();
 
   try {
-    browser = await chromium.launch({ headless: !show, slowMo: slow });
+    browser = await launchBrowser({ show, slow });
     const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
 
     await nukeCookies(page);

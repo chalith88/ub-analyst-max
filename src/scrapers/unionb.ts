@@ -1,4 +1,5 @@
-import { chromium, Page, Locator } from "playwright";
+import { Page, Locator } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import { RateRow } from "../types-minimal";
 import { clean } from "../utils/text";
 
@@ -48,7 +49,7 @@ function normalizeProduct(raw: string): string {
 
 export async function scrapeUnionBank(opts: RunOpts = {}): Promise<RateRow[]> {
   const { show = false, slow = 0 } = opts;
-  const browser = await chromium.launch({ headless: !show, slowMo: slow || 0 });
+  const browser = await launchBrowser({ show, slow: slow || 0 });
   const page = await browser.newPage();
 
   const out: RateRow[] = [];

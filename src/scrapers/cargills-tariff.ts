@@ -1,5 +1,6 @@
 // src/scrapers/cargills-tariff.ts
-import { chromium, Page } from "playwright";
+import { Page } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import fs from "fs/promises";
 import path from "path";
 
@@ -100,9 +101,9 @@ async function findTariffPdf(page: Page, logs: string[]): Promise<string> {
 
 export async function scrapeCargillsTariff(opts: Opts = {}): Promise<TariffRow[]> {
   const logs: string[] = [];
-  const browser = await chromium.launch({
-    headless: !(opts.show === "true"),
-    slowMo: opts.slow ? Number(opts.slow) : 0,
+  const browser = await launchBrowser({
+    show: opts.show === "true",
+    slow: opts.slow ? Number(opts.slow) : 0,
   });
   const page = await browser.newPage();
 

@@ -1,5 +1,6 @@
 // src/scrapers/combank_tariff.ts
-import { chromium, Locator, Page } from "playwright";
+import { Locator, Page } from "playwright";
+import { launchBrowser } from "../utils/browser";
 
 const SRC = "https://www.combank.lk/rates-tariff#general-tariffs";
 const nowISO = () => new Date().toISOString();
@@ -113,7 +114,7 @@ async function scrapeTariffTable(block: Locator): Promise<FeeRow[]> {
 /* ---------- main ---------- */
 
 export async function scrapeCombankTariff(): Promise<FeeRow[]> {
-  const browser = await chromium.launch({ headless: false, slowMo: 200 });
+  const browser = await launchBrowser({ show: false, slow: 200 });
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
 
   let out: FeeRow[] = [];

@@ -1,5 +1,6 @@
 // src/scrapers/nsb.ts
-import { chromium, Browser, Page } from "playwright";
+import { Browser, Page } from "playwright";
+import { launchBrowser } from "../utils/browser";
 
 export type RateRow = {
   bank: string;
@@ -62,7 +63,7 @@ export async function scrapeNSB(opts?: { show?: boolean; slow?: number }): Promi
   const now = new Date().toISOString();
 
   try {
-    browser = await chromium.launch({ headless: !opts?.show, slowMo: opts?.slow ?? 0 });
+    browser = await launchBrowser({ show: opts?.show, slow: opts?.slow ?? 0 });
     const page = await (await browser.newContext()).newPage();
 
     await page.goto(SRC, { waitUntil: "domcontentloaded" });

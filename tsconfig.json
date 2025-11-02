@@ -39,6 +39,11 @@
     "src/scrapers/boc.ts",
     "src/scrapers/nsb.ts",
     "src/scrapers/combank.ts",
+    "src/scrapers/cargills.ts",
+    "src/scrapers/hnb-tariff.ts",
+    "src/scrapers/combank_tariff.ts",
+    "src/scrapers/cargills-tariff.ts",
+    "src/scrapers/dfcc.ts",
     "src/types.ts"
   ]
 }

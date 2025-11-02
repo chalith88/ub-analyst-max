@@ -1,4 +1,5 @@
-import { chromium, BrowserContext } from "playwright";
+import { BrowserContext } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import { RateRow } from "../types-minimal";
 import { acceptAnyCookie } from "../utils/dom";
 import { clean, fanOutByYears, normalizeAwpr } from "../utils/text";
@@ -24,9 +25,9 @@ function productFrom(desc: string): "Home Loan" | "Personal Loan" | string {
 
 /* ── main ── */
 export async function scrapeDFCC(opts?: { show?: boolean; slow?: number }): Promise<RateRow[]> {
-  const browser = await chromium.launch({
-    headless: !opts?.show,
-    slowMo: opts?.slow && opts.slow > 0 ? opts.slow : undefined,
+  const browser = await launchBrowser({
+    show: opts?.show,
+    slow: opts?.slow && opts.slow > 0 ? opts.slow : undefined,
   });
 
   const context: BrowserContext = await browser.newContext({

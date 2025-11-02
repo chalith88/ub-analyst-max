@@ -1,5 +1,6 @@
 // src/scrapers/peoples.ts
-import { chromium, Page, Locator } from "playwright";
+import { Page, Locator } from "playwright";
+import { launchBrowser } from "../utils/browser";
 import { RateRow } from "../types-minimal";
 
 const URL = "https://www.peoplesbank.lk/interest-rates/";
@@ -71,7 +72,7 @@ async function readAllRows(container: Locator) {
 }
 
 export async function scrapePeoples(show = false, slow = 0): Promise<RateRow[]> {
-  const browser = await chromium.launch({ headless: !show, slowMo: slow });
+  const browser = await launchBrowser({ show, slow });
   const page = await browser.newPage();
   const now = new Date().toISOString();
   const out: RateRow[] = [];
